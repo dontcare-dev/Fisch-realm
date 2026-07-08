@@ -4,37 +4,59 @@
     <title>Server Members</title>
     <style>
         body { font-family: Arial; padding: 20px; background: #1a1a2e; color: white; }
-        .member { background: #16213e; padding: 15px; margin: 10px; border-radius: 10px; }
+        .member { background: #16213e; padding: 15px; margin: 10px; border-radius: 10px; display: flex; align-items: center; gap: 15px; }
         .online { border-left: 5px solid #43b581; }
         .idle { border-left: 5px solid #faa61a; }
         .dnd { border-left: 5px solid #f04747; }
         .offline { border-left: 5px solid #747f8d; opacity: 0.5; }
-        img { border-radius: 50%; width: 50px; vertical-align: middle; margin-right: 10px; }
+        img { border-radius: 50%; width: 50px; height: 50px; }
+        .status-badge { padding: 2px 10px; border-radius: 5px; font-size: 12px; }
+        .online .status-badge { background: #43b581; }
+        .idle .status-badge { background: #faa61a; }
+        .dnd .status-badge { background: #f04747; }
+        .offline .status-badge { background: #747f8d; }
+        .count { text-align: center; margin: 20px; font-size: 20px; }
+        .title { text-align: center; }
     </style>
 </head>
 <body>
-    <h1>📊 Server Members</h1>
+    <div class="title">
+        <h1>📊 Server Members</h1>
+        <div class="count" id="count">Loading...</div>
+    </div>
     <div id="members"></div>
 
     <script>
-        // 🔥 Your public URL from ngrok/Cloudflare/Serveo
-        const API_URL = "https://your-url.serveo.net/members";
+        // 🔥 YOUR PUBLIC URL
+        const API_URL = "https://c7sv9gs18qba.share.zrok.io/members";
         
         async function fetchMembers() {
-            const res = await fetch(API_URL);
-            const data = await res.json();
-            
-            document.getElementById('members').innerHTML = data.members.map(m => `
-                <div class="member ${m.status}">
-                    <img src="${m.avatar}">
-                    <strong>${m.name}</strong>
-                    <span>${m.status.toUpperCase()} ${m.activity || ''}</span>
-                </div>
-            `).join('');
+            try {
+                const res = await fetch(API_URL);
+                if (!res.ok) throw new Error('API not responding');
+                const data = await res.json();
+                
+                document.getElementById('count').textContent = `👥 ${data.members.length} members`;
+                
+                document.getElementById('members').innerHTML = data.members.map(m => `
+                    <div class="member ${m.status}">
+                        <img src="${m.avatar}">
+                        <div>
+                            <strong>${m.display_name || m.name}</strong>
+                            ${m.bot ? '🤖' : ''}
+                            <br>
+                            <span class="status-badge">${m.status.toUpperCase()}</span>
+                            ${m.activity ? '🎮 ' + m.activity : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } catch(e) {
+                document.getElementById('members').innerHTML = '❌ Error: ' + e.message;
+            }
         }
         
         fetchMembers();
-        setInterval(fetchMembers, 5000); // Updates every 5 seconds
+        setInterval(fetchMembers, 5000);
     </script>
 </body>
 </html>
