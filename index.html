@@ -6,116 +6,617 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            padding: 20px; 
-            background: #0a0a1a; 
-            color: white; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a2e 100%);
+            color: white;
+            padding: 20px;
         }
-        .container { max-width: 800px; margin: 0 auto; }
-        h1 { text-align: center; margin: 20px 0; font-size: 28px; }
-        .count { text-align: center; margin: 10px 0 30px; font-size: 18px; opacity: 0.8; }
-        .member { 
-            background: #1a1a2e; 
-            padding: 15px 20px; 
-            margin: 10px 0; 
-            border-radius: 12px; 
-            display: flex; 
-            align-items: center; 
+
+        /* Glass Container */
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            background: linear-gradient(135deg, #00d4ff, #7b2ffc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 20px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 14px;
+        }
+
+        .stat-item span { font-weight: 600; }
+
+        .online-count { color: #43b581; }
+        .idle-count { color: #faa61a; }
+        .dnd-count { color: #f04747; }
+        .offline-count { color: #747f8d; }
+
+        /* Member Cards */
+        .member {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
             gap: 15px;
-            transition: all 0.3s;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
         }
-        .member:hover { transform: scale(1.01); background: #222240; }
-        .online { border-left: 4px solid #43b581; }
-        .idle { border-left: 4px solid #faa61a; }
-        .dnd { border-left: 4px solid #f04747; }
-        .offline { border-left: 4px solid #747f8d; opacity: 0.5; }
-        .member img { 
-            border-radius: 50%; 
-            width: 50px; 
-            height: 50px; 
+
+        .member:hover {
+            transform: translateX(8px) scale(1.01);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Status Border */
+        .member.online { border-left: 4px solid #43b581; }
+        .member.idle { border-left: 4px solid #faa61a; }
+        .member.dnd { border-left: 4px solid #f04747; }
+        .member.offline { border-left: 4px solid #747f8d; opacity: 0.6; }
+
+        .member img {
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
             object-fit: cover;
-            border: 2px solid #2a2a4a;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            flex-shrink: 0;
         }
-        .member .info { flex: 1; }
-        .member .name { font-weight: 600; font-size: 16px; }
-        .member .bot-badge { 
-            background: #5865f2; 
-            font-size: 10px; 
-            padding: 2px 8px; 
-            border-radius: 10px; 
-            margin-left: 8px;
+
+        .member .info { flex: 1; min-width: 0; }
+        .member .name { 
+            font-weight: 600; 
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
-        .status-badge { 
+
+        .bot-badge {
+            background: linear-gradient(135deg, #5865f2, #7b2ffc);
+            font-size: 9px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .status-badge {
             display: inline-block;
-            padding: 2px 12px; 
-            border-radius: 10px; 
-            font-size: 11px; 
+            padding: 2px 14px;
+            border-radius: 20px;
+            font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
+            margin-top: 3px;
+            letter-spacing: 0.5px;
+        }
+
+        .member.online .status-badge { background: #43b58133; color: #43b581; border: 1px solid #43b58144; }
+        .member.idle .status-badge { background: #faa61a33; color: #faa61a; border: 1px solid #faa61a44; }
+        .member.dnd .status-badge { background: #f0474733; color: #f04747; border: 1px solid #f0474744; }
+        .member.offline .status-badge { background: #747f8d22; color: #747f8d; border: 1px solid #747f8d33; }
+
+        .activity {
+            font-size: 13px;
+            opacity: 0.7;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .activity-icon { font-size: 16px; }
+
+        .last-update {
+            text-align: center;
+            font-size: 12px;
+            opacity: 0.3;
+            margin-top: 20px;
+        }
+
+        /* ======================== */
+        /* PORTFOLIO MODAL */
+        /* ======================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal {
+            background: rgba(20, 20, 40, 0.95);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: rotate(90deg);
+        }
+
+        .modal-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: block;
+            border: 4px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-name {
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .modal-tag {
+            text-align: center;
+            opacity: 0.5;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .modal-status {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-status .badge {
+            display: inline-block;
+            padding: 4px 20px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge.online { background: #43b58133; color: #43b581; border: 1px solid #43b58144; }
+        .badge.idle { background: #faa61a33; color: #faa61a; border: 1px solid #faa61a44; }
+        .badge.dnd { background: #f0474733; color: #f04747; border: 1px solid #f0474744; }
+        .badge.offline { background: #747f8d22; color: #747f8d; border: 1px solid #747f8d33; }
+
+        .modal-activity {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-top: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .modal-activity .label {
+            font-size: 11px;
+            text-transform: uppercase;
+            opacity: 0.4;
+            letter-spacing: 1px;
+        }
+
+        .modal-activity .value {
+            font-size: 18px;
+            font-weight: 500;
             margin-top: 4px;
         }
-        .online .status-badge { background: #43b581; color: #fff; }
-        .idle .status-badge { background: #faa61a; color: #fff; }
-        .dnd .status-badge { background: #f04747; color: #fff; }
-        .offline .status-badge { background: #2a2a4a; color: #747f8d; }
-        .activity { 
-            font-size: 13px; 
-            opacity: 0.7; 
-            margin-top: 2px;
+
+        .modal-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.06);
+            margin: 20px 0;
         }
-        .loading { text-align: center; padding: 50px; opacity: 0.5; }
-        .error { text-align: center; padding: 50px; color: #f04747; }
-        .footer { text-align: center; margin: 40px 0 20px; opacity: 0.3; font-size: 12px; }
-        .last-update { text-align: center; font-size: 12px; opacity: 0.4; margin-top: 10px; }
+
+        .modal-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .modal-info-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .modal-info-item .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            opacity: 0.3;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-info-item .value {
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 3px;
+        }
+
+        .modal-bot-tag {
+            display: inline-block;
+            background: linear-gradient(135deg, #5865f2, #7b2ffc);
+            padding: 4px 16px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 10px;
+        }
+
+        /* Scrollbar */
+        .modal::-webkit-scrollbar {
+            width: 4px;
+        }
+        .modal::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .modal::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            opacity: 0.5;
+        }
+
+        .loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #7b2ffc;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error */
+        .error {
+            text-align: center;
+            padding: 50px;
+            color: #f04747;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header h1 { font-size: 24px; }
+            .header .stats { gap: 10px; }
+            .stat-item { font-size: 12px; padding: 5px 14px; }
+            .member { padding: 12px 15px; }
+            .member img { width: 44px; height: 44px; }
+            .modal { padding: 25px; }
+            .modal-avatar { width: 90px; height: 90px; }
+            .modal-name { font-size: 22px; }
+            .modal-info-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <h1>📊 Server Members</h1>
-        <div class="count" id="count">Loading...</div>
-        <div id="members"></div>
-        <div class="last-update" id="updateTime"></div>
-        <div class="footer">Live Discord Presence</div>
+        <!-- Header -->
+        <div class="header">
+            <h1>✨ Server Members</h1>
+            <div class="stats" id="stats">
+                <div class="stat-item">👥 <span id="totalCount">0</span></div>
+                <div class="stat-item online-count">🟢 <span id="onlineCount">0</span></div>
+                <div class="stat-item idle-count">🟡 <span id="idleCount">0</span></div>
+                <div class="stat-item dnd-count">🔴 <span id="dndCount">0</span></div>
+                <div class="stat-item offline-count">⚫ <span id="offlineCount">0</span></div>
+            </div>
+        </div>
+
+        <!-- Member List -->
+        <div id="members">
+            <div class="loading">
+                <div class="spinner"></div>
+                Loading members...
+            </div>
+        </div>
+
+        <div class="last-update" id="updateTime">Loading...</div>
+    </div>
+
+    <!-- ======================== -->
+    <!-- PORTFOLIO MODAL -->
+    <!-- ======================== -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <button class="modal-close" id="modalClose">✕</button>
+            <img class="modal-avatar" id="modalAvatar" src="" alt="Avatar">
+            <div class="modal-name" id="modalName">Username</div>
+            <div class="modal-tag" id="modalTag">#0000</div>
+            <div class="modal-status" id="modalStatus"></div>
+            <div id="modalBotTag"></div>
+            <div class="modal-divider"></div>
+            <div class="modal-activity" id="modalActivity">
+                <div class="label">🎮 Current Activity</div>
+                <div class="value" id="modalActivityValue">Nothing</div>
+            </div>
+            <div class="modal-divider"></div>
+            <div class="modal-info-grid">
+                <div class="modal-info-item">
+                    <div class="label">Status</div>
+                    <div class="value" id="modalStatusValue">-</div>
+                </div>
+                <div class="modal-info-item">
+                    <div class="label">Account Type</div>
+                    <div class="value" id="modalAccountType">User</div>
+                </div>
+                <div class="modal-info-item">
+                    <div class="label">User ID</div>
+                    <div class="value" id="modalUserId" style="font-size:11px;opacity:0.6;">-</div>
+                </div>
+                <div class="modal-info-item">
+                    <div class="label">Display Name</div>
+                    <div class="value" id="modalDisplayName">-</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // 🔥 PUT YOUR ZROK URL HERE
+        // ============================================
+        // CONFIG
+        // ============================================
         const API_URL = "https://c7sv9gs18qba.share.zrok.io/members";
-        
+
+        // ============================================
+        // STATE
+        // ============================================
+        let membersData = [];
+
+        // ============================================
+        // DOM REFS
+        // ============================================
+        const membersContainer = document.getElementById('members');
+        const totalCount = document.getElementById('totalCount');
+        const onlineCount = document.getElementById('onlineCount');
+        const idleCount = document.getElementById('idleCount');
+        const dndCount = document.getElementById('dndCount');
+        const offlineCount = document.getElementById('offlineCount');
+        const updateTime = document.getElementById('updateTime');
+
+        // Modal refs
+        const modal = document.getElementById('modal');
+        const modalClose = document.getElementById('modalClose');
+        const modalAvatar = document.getElementById('modalAvatar');
+        const modalName = document.getElementById('modalName');
+        const modalTag = document.getElementById('modalTag');
+        const modalStatus = document.getElementById('modalStatus');
+        const modalBotTag = document.getElementById('modalBotTag');
+        const modalActivityValue = document.getElementById('modalActivityValue');
+        const modalStatusValue = document.getElementById('modalStatusValue');
+        const modalAccountType = document.getElementById('modalAccountType');
+        const modalUserId = document.getElementById('modalUserId');
+        const modalDisplayName = document.getElementById('modalDisplayName');
+
+        // ============================================
+        // CLOSE MODAL
+        // ============================================
+        function closeModal() {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        modalClose.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // ============================================
+        // OPEN MODAL
+        // ============================================
+        function openModal(member) {
+            const status = member.status || 'offline';
+            const statusEmoji = status === 'online' ? '🟢' : status === 'idle' ? '🟡' : status === 'dnd' ? '🔴' : '⚫';
+            
+            modalAvatar.src = member.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+            modalName.textContent = member.display_name || member.name;
+            modalTag.textContent = `@${member.name}`;
+            modalStatus.innerHTML = `<span class="badge ${status}">${statusEmoji} ${status.toUpperCase()}</span>`;
+            modalStatusValue.textContent = status.toUpperCase();
+            modalAccountType.textContent = member.bot ? '🤖 Bot' : '👤 User';
+            modalUserId.textContent = member.id || 'Unknown';
+            modalDisplayName.textContent = member.display_name || member.name;
+            modalActivityValue.textContent = member.activity || 'Nothing right now';
+
+            if (member.bot) {
+                modalBotTag.innerHTML = '<span class="modal-bot-tag">🤖 Bot Account</span>';
+            } else {
+                modalBotTag.innerHTML = '';
+            }
+
+            // Auto close on outside click handled above
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // ============================================
+        // FETCH MEMBERS
+        // ============================================
         async function fetchMembers() {
             try {
                 const res = await fetch(API_URL);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
-                
-                const total = data.members.length;
-                const online = data.members.filter(m => m.status === 'online').length;
-                document.getElementById('count').textContent = `👥 ${total} members • 🟢 ${online} online`;
-                
-                document.getElementById('members').innerHTML = data.members.map(m => `
-                    <div class="member ${m.status}">
-                        <img src="${m.avatar}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                membersData = data.members || [];
+
+                renderMembers(membersData);
+                updateStats(membersData);
+                updateTime.textContent = `🔄 Updated: ${new Date().toLocaleTimeString()}`;
+            } catch (e) {
+                membersContainer.innerHTML = `<div class="error">❌ ${e.message}</div>`;
+            }
+        }
+
+        // ============================================
+        // RENDER
+        // ============================================
+        function renderMembers(members) {
+            if (!members.length) {
+                membersContainer.innerHTML = '<div class="loading">No members found</div>';
+                return;
+            }
+
+            membersContainer.innerHTML = members.map(m => {
+                const status = m.status || 'offline';
+                const statusEmoji = status === 'online' ? '🟢' : status === 'idle' ? '🟡' : status === 'dnd' ? '🔴' : '⚫';
+                const activityIcon = m.activity ? (m.activity.includes('Spotify') ? '🎵' : '🎮') : '💤';
+                const botBadge = m.bot ? '<span class="bot-badge">🤖 BOT</span>' : '';
+                const avatar = m.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+
+                return `
+                    <div class="member ${status}" data-id="${m.id || ''}">
+                        <img src="${avatar}" 
+                             onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" 
+                             loading="lazy">
                         <div class="info">
                             <div class="name">
                                 ${m.display_name || m.name}
-                                ${m.bot ? '<span class="bot-badge">🤖 BOT</span>' : ''}
+                                ${botBadge}
                             </div>
-                            <span class="status-badge">${m.status === 'dnd' ? '🔴' : m.status === 'idle' ? '🟡' : m.status === 'online' ? '🟢' : '⚫'} ${m.status.toUpperCase()}</span>
-                            ${m.activity ? `<div class="activity">🎮 ${m.activity}</div>` : ''}
+                            <span class="status-badge">${statusEmoji} ${status.toUpperCase()}</span>
+                            ${m.activity ? `<div class="activity"><span class="activity-icon">${activityIcon}</span> ${m.activity}</div>` : ''}
                         </div>
                     </div>
-                `).join('');
-                
-                document.getElementById('updateTime').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
-            } catch(e) {
-                document.getElementById('members').innerHTML = `<div class="error">❌ ${e.message}</div>`;
-            }
+                `;
+            }).join('');
+
+            // ============================================
+            // CLICK HANDLERS
+            // ============================================
+            document.querySelectorAll('.member').forEach(el => {
+                el.addEventListener('click', () => {
+                    const id = el.dataset.id;
+                    const member = membersData.find(m => String(m.id) === id);
+                    if (member) openModal(member);
+                });
+            });
         }
-        
+
+        // ============================================
+        // STATS
+        // ============================================
+        function updateStats(members) {
+            const total = members.length;
+            const online = members.filter(m => m.status === 'online').length;
+            const idle = members.filter(m => m.status === 'idle').length;
+            const dnd = members.filter(m => m.status === 'dnd').length;
+            const offline = members.filter(m => m.status === 'offline' || !m.status).length;
+
+            totalCount.textContent = total;
+            onlineCount.textContent = online;
+            idleCount.textContent = idle;
+            dndCount.textContent = dnd;
+            offlineCount.textContent = offline;
+        }
+
+        // ============================================
+        // START
+        // ============================================
         fetchMembers();
         setInterval(fetchMembers, 5000);
     </script>
+
 </body>
 </html>
