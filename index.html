@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Profiles Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0b0f19;
+            background-image:
+                radial-gradient(at 10% 20%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 90% 80%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+            min-height: 100vh;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+    </style>
+</head>
+<body class="text-slate-200 font-sans p-6 md:p-12">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="glass-panel rounded-2xl p-6 mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Live Presence Gateway
+                </h1>
+                <p class="text-sm text-slate-400 mt-1">Profile snapshot synced daily from the Termux-hosted bot</p>
+            </div>
+            <div id="connection-badge" class="px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
+                Loading snapshot...
+            </div>
+        </header>
+
+        <main id="profiles-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full text-center py-12 text-slate-400">
+                Fetching profile data...
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Path to the JSON snapshot the bot commits/pushes into this repo
+        const DATA_URL = "./data/users.json";
+        const POLL_INTERVAL_MS = 60 * 60 * 1000; // re-check once an hour
+
+        const gridElement = document.getElementById('profiles-grid');
+        const badgeElement = document.getElementById('connection-badge');
+
+        let cachedProfilesMap = {};
+
+        const statusColors = {
+            online: 'bg-emerald-500',
+            idle: 'bg-amber-500',
+            dnd: 'bg-rose-500',
+            offline: 'bg-slate-500'
+        };
+
+        const activityTypeLabels = ["Playing", "Streaming", "Listening to", "Watching", "Custom", "Competing in"];
+
+        function setBadge(state, text) {
+            const styles = {
+                ok: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+                warn: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+                err: "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+            };
+            badgeElement.className = `px-3 py-1 rounded-full text-xs font-medium ${styles[state]}`;
+            badgeElement.textContent = text;
+        }
+
+        async function fetchProfiles() {
+            try {
+                const response = await fetch(DATA_URL + "?t=" + Date.now()); // cache-bust
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const json = await response.json();
+
+                if (json.success && json.data) {
+                    cachedProfilesMap = json.data;
+                    renderDashboard();
+                    const updatedTime = json.updated ? new Date(json.updated).toLocaleString() : "unknown";
+                    setBadge("ok", `Synced ${updatedTime}`);
+                } else {
+                    setBadge("warn", "Snapshot returned no data");
+                }
+            } catch (err) {
+                console.error("Failed fetching snapshot:", err);
+                setBadge("err", "Failed to load snapshot");
+            }
+        }
+
+        function renderDashboard() {
+            const keys = Object.keys(cachedProfilesMap);
+            if (keys.length === 0) {
+                gridElement.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400">No profiles found in the latest snapshot.</div>`;
+                return;
+            }
+
+            gridElement.innerHTML = keys.map(key => {
+                const user = cachedProfilesMap[key];
+                const status = user.status || "offline";
+                const statusDotColor = statusColors[status] || 'bg-slate-500';
+
+                const activeActivities = user.activities || [];
+
+                return `
+                    <div class="glass-panel rounded-2xl overflow-hidden transition-transform duration-300 hover:scale-[1.02]">
+                        <div class="h-20 w-full bg-cover bg-center relative" style="background-image: ${user.banner ? `url('${user.banner}')` : "linear-gradient(135deg, #1e1b4b, #311042)"}">
+                            <span class="absolute top-2 right-2 text-[10px] bg-black/40 text-slate-400 px-2 py-0.5 rounded-md backdrop-blur-sm">
+                                ${status.toUpperCase()}
+                            </span>
+                        </div>
+
+                        <div class="px-5 pb-5 pt-0 relative flex flex-col">
+                            <div class="relative -mt-10 mb-3 inline-block self-start">
+                                <img src="${user.avatar || ''}"
+                                     alt="Avatar"
+                                     class="w-16 h-16 rounded-full border-4 border-[#0b0f19] object-cover bg-[#1e293b]" />
+                                <span class="absolute bottom-0.5 right-0.5 block h-4 w-4 rounded-full border-2 border-[#0b0f19] ${statusDotColor}"></span>
+                            </div>
+
+                            <h2 class="text-lg font-semibold text-white tracking-tight leading-tight">${escapeHtml(user.displayName || user.username)}</h2>
+                            <p class="text-xs text-indigo-400 font-mono">@${escapeHtml(user.username)}</p>
+
+                            ${user.customStatus ? `
+                                <div class="mt-3 text-xs bg-white/5 border border-white/5 rounded-lg p-2.5 text-slate-300 italic">
+                                    "${escapeHtml(user.customStatus)}"
+                                </div>
+                            ` : ''}
+
+                            ${activeActivities.length > 0 ? `
+                                <div class="mt-4 pt-4 border-t border-white/5 space-y-3">
+                                    <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Current Activities</p>
+                                    ${activeActivities.map(act => `
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="bg-indigo-500/10 p-1.5 rounded-lg border border-indigo-500/20 text-indigo-400 text-xs px-2 py-1">
+                                                ${activityTypeLabels[act.type] || "Activity"}
+                                            </div>
+                                            <span class="text-xs text-slate-300">${escapeHtml(act.name || '')}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+
+                            <div class="mt-4 pt-3 border-t border-white/5 text-[10px] text-slate-500 flex flex-wrap gap-1.5">
+                                ${(user.roles || []).slice(0, 5).map(r => `<span class="bg-white/5 px-2 py-0.5 rounded-md">${escapeHtml(r)}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // Initial load + periodic re-poll
+        fetchProfiles();
+        setInterval(fetchProfiles, POLL_INTERVAL_MS);
+    </script>
+</body>
+</html>
